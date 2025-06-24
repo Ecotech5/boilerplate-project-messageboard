@@ -2,7 +2,6 @@
 const Thread = require('../models/thread');
 
 module.exports = function (app) {
-  // ===== THREAD ROUTES =====
   app.route('/api/threads/:board')
     .post(async (req, res) => {
       try {
@@ -16,7 +15,7 @@ module.exports = function (app) {
         });
 
         await thread.save();
-        res.status(200).json({ success: true, thread });
+        res.status(200).json(thread);
       } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -25,25 +24,30 @@ module.exports = function (app) {
 
     .get(async (req, res) => {
       const { board } = req.params;
-      const threads = await Thread.find({ board })
-        .sort({ bumped_on: -1 })
-        .limit(10)
-        .select('-delete_password -reported')
-        .lean();
+      try {
+        const threads = await Thread.find({ board })
+          .sort({ bumped_on: -1 })
+          .limit(10)
+          .select('-reported -delete_password')
+          .lean();
 
-      threads.forEach(thread => {
-        thread.replycount = thread.replies.length;
-        thread.replies = thread.replies
-          .sort((a, b) => b.created_on - a.created_on)
-          .slice(0, 3)
-          .map(r => ({
-            _id: r._id,
-            text: r.text,
-            created_on: r.created_on
-          }));
-      });
+        threads.forEach(thread => {
+          thread.replycount = thread.replies.length;
+          thread.replies = thread.replies
+            .sort((a, b) => b.created_on - a.created_on)
+            .slice(0, 3)
+            .map(r => ({
+              _id: r._id,
+              text: r.text,
+              created_on: r.created_on
+            }));
+        });
 
-      res.json(threads);
+        res.json(threads);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+      }
     })
 
     .delete(async (req, res) => {
@@ -56,7 +60,6 @@ module.exports = function (app) {
         await Thread.findByIdAndDelete(thread_id);
         res.send('success');
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     })
@@ -67,12 +70,10 @@ module.exports = function (app) {
         await Thread.findByIdAndUpdate(thread_id, { reported: true });
         res.send('reported');
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     });
 
-  // ===== REPLY ROUTES =====
   app.route('/api/replies/:board')
     .post(async (req, res) => {
       try {
@@ -80,7 +81,13 @@ module.exports = function (app) {
         const thread = await Thread.findById(thread_id);
         if (!thread) return res.status(404).send('thread not found');
 
-        thread.replies.push({ text, delete_password });
+        thread.replies.push({
+          text,
+          delete_password,
+          created_on: new Date(),
+          reported: false
+        });
+
         thread.bumped_on = new Date();
         await thread.save();
 
@@ -97,7 +104,7 @@ module.exports = function (app) {
         const thread = await Thread.findById(thread_id).select('-delete_password -reported');
         if (!thread) return res.status(404).send('thread not found');
 
-        const formattedReplies = thread.replies.map(r => ({
+        const replies = thread.replies.map(r => ({
           _id: r._id,
           text: r.text,
           created_on: r.created_on
@@ -108,10 +115,9 @@ module.exports = function (app) {
           text: thread.text,
           created_on: thread.created_on,
           bumped_on: thread.bumped_on,
-          replies: formattedReplies
+          replies
         });
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     })
@@ -131,7 +137,6 @@ module.exports = function (app) {
         await thread.save();
         res.send('success');
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     })
@@ -140,16 +145,13 @@ module.exports = function (app) {
       const { thread_id, reply_id } = req.body;
       try {
         const thread = await Thread.findById(thread_id);
-        if (!thread) return res.send('thread not found');
-
-        const reply = thread.replies.id(reply_id);
+        const reply = thread?.replies.id(reply_id);
         if (!reply) return res.send('reply not found');
 
         reply.reported = true;
         await thread.save();
         res.send('reported');
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     });
