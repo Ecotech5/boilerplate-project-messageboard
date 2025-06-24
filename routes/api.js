@@ -1,5 +1,5 @@
 'use strict';
-const Thread = require('../models/Thread');
+const Thread = require('../models/thread');
 
 module.exports = function (app) {
   // ===== THREAD ROUTES =====
