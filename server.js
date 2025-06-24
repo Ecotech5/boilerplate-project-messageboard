@@ -1,13 +1,19 @@
 'use strict';
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
-require('dotenv').config();
+
 
 const apiRoutes = require('./routes/api.js');
 
 const app = express();
+
+// Security
+app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.dnsPrefetchControl({ allow: false }));
+app.use(helmet.referrerPolicy({ policy: 'same-origin' }));
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -15,10 +21,7 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Security
-app.use(helmet.frameguard({ action: 'sameorigin' }));
-app.use(helmet.dnsPrefetchControl({ allow: false }));
-app.use(helmet.referrerPolicy({ policy: 'same-origin' }));
+
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))

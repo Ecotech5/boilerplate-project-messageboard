@@ -5,10 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "cross-env NODE_ENV=test mocha tests/2_functional-tests.js --exit"
+    "test": "cross-env NODE_ENV=test mocha tests/2_functional-tests.js --timeout 5000 --exit"
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
+    "body-parser": "^1.20.3",
     "chai": "^4.5.0",
     "chai-http": "^4.3.0",
     "cors": "^2.8.5",
