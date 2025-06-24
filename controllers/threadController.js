@@ -1,4 +1,4 @@
-const Thread = require('../models/Thread');
+const Thread = require('../models/thread');
 
 exports.createThread = async (req, res) => {
   const { board } = req.params;
