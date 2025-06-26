@@ -2,6 +2,8 @@ const chaiHttp = require('chai-http');
 const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
+const mongoose = require('mongoose');
+const Thread = require('../models/thread'); // Correct model
 
 chai.use(chaiHttp);
 
@@ -9,6 +11,22 @@ let threadId;
 let replyId;
 
 describe('Functional Tests', function () {
+  this.timeout(5000);
+
+  before(async function () {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+    }
+
+    console.log('✅ MongoDB connected (before tests)');
+    console.log('🧹 Cleaning database before test...');
+    await Thread.deleteMany({});
+    console.log('✅ Database cleaned');
+  });
+
   it('Create thread', done => {
     chai.request(server)
       .post('/api/threads/test')
@@ -56,6 +74,7 @@ describe('Functional Tests', function () {
       .query({ thread_id: threadId })
       .end((err, res) => {
         assert.property(res.body, 'replies');
+        assert.isArray(res.body.replies);
         replyId = res.body.replies[0]._id;
         done();
       });
