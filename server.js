@@ -18,19 +18,29 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// ✅ Apply Helmet security headers for FCC tests
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"]
-    }
-  },
-  frameguard: { action: 'sameorigin' },            // ✅ Test 2
-  dnsPrefetchControl: { allow: false },            // ✅ Test 3
-  referrerPolicy: { policy: 'same-origin' }        // ✅ Test 4
+
+// ✅ Apply Helmet headers for FreeCodeCamp tests
+app.use(helmet());
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'"],
+    baseUri: ["'self'"],
+    blockAllMixedContent: [],
+    fontSrc: ["'self'", "https:", "data:"],
+    formAction: ["'self'"],
+    frameAncestors: ["'self'"],
+    imgSrc: ["'self'", "data:"],
+    objectSrc: ["'none'"],
+    scriptSrcAttr: ["'none'"],
+    upgradeInsecureRequests: []
+  }
 }));
+app.use(helmet.frameguard({ action: 'sameorigin' })); // ✅ Test 2
+app.use(helmet.dnsPrefetchControl({ allow: false })); // ✅ Test 3
+app.use(helmet.referrerPolicy({ policy: 'same-origin' })); // ✅ Test 4
+
 
 // ✅ Other middleware
 app.use(cors({ origin: '*' }));

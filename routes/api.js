@@ -8,17 +8,11 @@ module.exports = function (app) {
         const { board } = req.params;
         const { text, delete_password } = req.body;
 
-        const thread = new Thread({
-          board,
-          text,
-          delete_password
-        });
-
+        const thread = new Thread({ board, text, delete_password });
         await thread.save();
-        // ✅ FCC expects redirect after thread creation
+
         res.redirect(`/b/${board}/`);
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     })
@@ -46,7 +40,6 @@ module.exports = function (app) {
 
         res.json(threads);
       } catch (err) {
-        console.error(err);
         res.status(500).send('Server error');
       }
     })
@@ -60,7 +53,7 @@ module.exports = function (app) {
         }
         await Thread.findByIdAndDelete(thread_id);
         res.send('success');
-      } catch (err) {
+      } catch {
         res.status(500).send('Server error');
       }
     })
@@ -70,7 +63,7 @@ module.exports = function (app) {
       try {
         await Thread.findByIdAndUpdate(thread_id, { reported: true });
         res.send('reported');
-      } catch (err) {
+      } catch {
         res.status(500).send('Server error');
       }
     });
@@ -92,10 +85,8 @@ module.exports = function (app) {
         thread.bumped_on = new Date();
         await thread.save();
 
-        // ✅ FCC expects redirect after reply creation
         res.redirect(`/b/${req.params.board}/${thread_id}`);
-      } catch (err) {
-        console.error(err);
+      } catch {
         res.status(500).send('Server error');
       }
     })
@@ -119,7 +110,7 @@ module.exports = function (app) {
           bumped_on: thread.bumped_on,
           replies
         });
-      } catch (err) {
+      } catch {
         res.status(500).send('Server error');
       }
     })
@@ -138,7 +129,7 @@ module.exports = function (app) {
         reply.text = '[deleted]';
         await thread.save();
         res.send('success');
-      } catch (err) {
+      } catch {
         res.status(500).send('Server error');
       }
     })
@@ -153,7 +144,7 @@ module.exports = function (app) {
         reply.reported = true;
         await thread.save();
         res.send('reported');
-      } catch (err) {
+      } catch {
         res.status(500).send('Server error');
       }
     });
