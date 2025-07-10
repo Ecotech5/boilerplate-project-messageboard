@@ -15,7 +15,8 @@ module.exports = function (app) {
         });
 
         await thread.save();
-        res.status(200).json(thread);
+        // ✅ FCC expects redirect after thread creation
+        res.redirect(`/b/${board}/`);
       } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -91,7 +92,8 @@ module.exports = function (app) {
         thread.bumped_on = new Date();
         await thread.save();
 
-        res.status(200).json({ success: true });
+        // ✅ FCC expects redirect after reply creation
+        res.redirect(`/b/${req.params.board}/${thread_id}`);
       } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
